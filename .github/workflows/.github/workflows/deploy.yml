@@ -1,6 +1,7 @@
 name: Build and Deploy
 
 on:
+  workflow_dispatch:   # 👈 THIS creates the Run button in GitHub UI
   push:
     branches: [ main ]
 
