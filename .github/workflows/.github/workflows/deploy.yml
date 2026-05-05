@@ -1,53 +1,53 @@
 name: Vulture 10K Daily Engine
 
 on:
-  schedule:
-    - cron: "0 9 * * *" # Runs daily at 9:00 AM
-  workflow_dispatch: # Allows you to trigger it manually
+  schedule:
+    - cron: "0 9 * * *" # Runs daily at 9:00 AM
+  workflow_dispatch: # Allows you to trigger it manually
 
 permissions:
-  contents: write
+  contents: write
 
 jobs:
-  run-vulture-matrix:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          # fetch-depth 0 ensures the full history is downloaded for the rebase
-          fetch-depth: 0
+  run-vulture-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth 0 ensures the full history is downloaded for the rebase
+          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
 
-      - name: Execute Vulture Master Script
-        run: |
-          # Runs the master generator if it exists in the repo
-          if [ -f vulture_generator_master.py ]; then python vulture_generator_master.py; fi
+      - name: Execute Vulture Master Script
+        run: |
+          # Runs the master generator if it exists in the repo
+          if [ -f vulture_generator_master.py ]; then python vulture_generator_master.py; fi
 
-      - name: Commit and Push Changes
-        run: |
-          git config user.name "Vulture-Bot"
-          git config user.email "actions@github.com"
-          git add .
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "Vulture-Bot"
+          git config user.email "actions@github.com"
+          git add .
 
-          # Check if there are actually changes before committing
-          if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Vulture Engine Sync: $(date +'%Y-%m-%d')"
+          # Check if there are actually changes before committing
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Vulture Engine Sync: $(date +'%Y-%m-%d')"
 
-            # THE CRITICAL FIX: Pull remote changes and rebase our work on top
-            # This prevents the [rejected] main -> main (fetch first) error
-            git pull --rebase origin main
+            # THE CRITICAL FIX: Pull remote changes and rebase our work on top
+            # This prevents the [rejected] main -> main (fetch first) error
+            git pull --rebase origin main
 
-            git push
-          else
-            echo "No changes detected, skipping push."
-          fi
+            git push
+          else
+            echo "No changes detected, skipping push."
+          fi
