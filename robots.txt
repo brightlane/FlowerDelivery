@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap for Google/Bing indexing
+Sitemap: https://brightlane.github.io/FlowerDelivery/sitemap.xml
+
+# Allow all crawlers
+User-agent
