@@ -1,14 +1,13 @@
 {
-  "name": "flower-delivery-blaster",
-  "version": "1.0.0",
-  "scripts": {
-    "blast": "node blaster.js",
-    "blast:5k": "node blaster.js --count=5000",
-    "deploy": "npm run blast && git add . && git commit -m 'Blaster $(date)' && git push"
-  },
   "dependencies": {
     "@faker-js/faker": "^8.3.1",
     "dayjs": "^1.11.10",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "cheerio": "^1.0.0-rc.12",
+    "yargs": "^17.7.2"
+  },
+  "scripts": {
+    "full-pipeline": "npm run blast:5k && npm run inject && npm run sitemap",
+    "inject": "node injector.js"
   }
 }
