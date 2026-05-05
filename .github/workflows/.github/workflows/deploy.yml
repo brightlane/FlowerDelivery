@@ -15,7 +15,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          # fetch-depth 0 ensures the full history is downloaded for the rebase
           fetch-depth: 0
 
       - name: Set up Python
@@ -30,7 +29,6 @@ jobs:
 
       - name: Execute Vulture Master Script
         run: |
-          # Runs the master generator if it exists in the repo
           if [ -f vulture_generator_master.py ]; then python vulture_generator_master.py; fi
 
       - name: Commit and Push Changes
@@ -39,14 +37,9 @@ jobs:
           git config user.email "actions@github.com"
           git add .
 
-          # Check if there are actually changes before committing
           if [ -n "$(git status --porcelain)" ]; then
             git commit -m "Vulture Engine Sync: $(date +'%Y-%m-%d')"
-
-            # THE CRITICAL FIX: Pull remote changes and rebase our work on top
-            # This prevents the [rejected] main -> main (fetch first) error
             git pull --rebase origin main
-
             git push
           else
             echo "No changes detected, skipping push."
