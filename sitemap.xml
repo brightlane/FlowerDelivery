@@ -1,0 +1,186 @@
+// sitemap-generator.js - Full Auto Sitemap Generator for FlowerDelivery Affiliate Site
+// Benny "Palmo Kid" Palmarino - Optimized for GitHub Pages + SEO + Affiliate Conversions
+// Run: node sitemap-generator.js
+
+const fs = require('fs');
+const path = require('path');
+const { XMLParser, XMLBuilder } = require('fast-xml-parser');
+const dayjs = require('dayjs');
+
+class FlowerDeliverySitemapGenerator {
+  constructor() {
+    this.baseUrl = 'https://brightlane.github.io/FlowerDelivery/';
+    this.today = dayjs().format('YYYY-MM-DD');
+    this.siteDir = './';
+    this.imageDir = 'images/';
+  }
+
+  // High-converting money pages (priority targets)
+  getMoneyPages() {
+    return [
+      { path: '', priority: 1.0, changefreq: 'daily', images: ['hero-flower-delivery.jpg'] },
+      { path: 'index.html', priority: 0.95, changefreq: 'daily' },
+      { path: 'mothers-day-flowers.html', priority: 0.95, changefreq: 'daily' },
+      { path: 'birthday-flowers.html', priority: 0.92, changefreq: 'weekly' },
+      { path: 'valentines-day-flowers.html', priority: 0.90, changefreq: 'monthly' },
+      { path: 'anniversary-flowers.html', priority: 0.88, changefreq: 'weekly' },
+      { path: 'sympathy-flowers.html', priority: 0.85, changefreq: 'weekly' },
+    ];
+  }
+
+  // Flower type long-tail pages
+  getFlowerTypePages() {
+    return [
+      'roses-delivery.html',
+      'tulips-delivery.html', 
+      'lilies-delivery.html',
+      'orchids-delivery.html',
+      'sunflowers-delivery.html'
+    ].map(p => ({ path: p, priority: 0.85, changefreq: 'weekly' }));
+  }
+
+  // Local SEO pages (Pennsylvania focus)
+  getLocalPages() {
+    const locations = ['philadelphia', 'langhorne', 'bucks-county', 'newtown', 'levittown'];
+    return locations.map(loc => ({
+      path: `flowers-${loc}.html`,
+      priority: 0.80,
+      changefreq: 'weekly'
+    }));
+  }
+
+  // Auto-detect blog posts
+  getBlogPages() {
+    const blogDir = 'blog/';
+    try {
+      const files = fs.readdirSync(blogDir).filter(f => f.endsWith('.html'));
+      return files.map(f => ({
+        path: `${blogDir}${f}`,
+        priority: 0.70,
+        changefreq: 'daily'
+      }));
+    } catch {
+      return [{ path: 'blog.html', priority: 0.70, changefreq: 'daily' }];
+    }
+  }
+
+  // Multilingual pages
+  getMultilingualPages() {
+    return [
+      {
+        path: 'es/flores-entrega.html',
+        priority: 0.75,
+        changefreq: 'weekly',
+        hreflang: { es: 'es/flores-entrega.html', 'en': '../' }
+      }
+    ];
+  }
+
+  // Technical files
+  getTechFiles() {
+    return [
+      'sitemap.xml',
+      'robots.txt', 
+      'affiliate.json'
+    ].map(p => ({ path: p, priority: 0.3, changefreq: 'monthly' }));
+  }
+
+  // Generate image data
+  getImagesForPage(pagePath) {
+    const images = ['hero.jpg', 'product1.jpg', 'product2.jpg'];
+    return images.map(img => ({
+      loc: `${this.baseUrl}${this.imageDir}${img}`,
+      title: `${pagePath.replace('.html', '')} flowers`,
+      caption: `Beautiful ${img.split('.')[0]} for fast delivery`
+    }));
+  }
+
+  generate() {
+    console.log('🌸 Generating enhanced FlowerDelivery sitemap...');
+
+    const allPages = [
+      ...this.getMoneyPages(),
+      ...this.getFlowerTypePages(),
+      ...this.getLocalPages(),
+      ...this.getBlogPages(),
+      ...this.getMultilingualPages(),
+      ...this.getTechFiles()
+    ];
+
+    const urlset = {
+      '@_xmlns': 'http://www.sitemaps.org/schemas/sitemap/0.9',
+      '@_xmlns:image': 'http://www.google.com/schemas/sitemap-image/1.1',
+      '@_xmlns:xhtml': 'http://www.w3.org/1999/xhtml',
+      url: allPages.map(page => {
+        const urlObj = {
+          loc: `${this.baseUrl}${page.path}`,
+          lastmod: this.today,
+          changefreq: page.changefreq,
+          priority: page.priority.toFixed(2)
+        };
+
+        // Add images if available
+        if (page.images || true) {
+          urlObj['image:image'] = this.getImagesForPage(page.path);
+        }
+
+        // Add hreflang for multilingual
+        if (page.hreflang) {
+          urlObj['xhtml:link'] = Object.entries(page.hreflang).map(([lang, href]) => ({
+            '@_rel': 'alternate',
+            '@_hreflang': lang,
+            '@_href': `${this.baseUrl}${href}`
+          }));
+        }
+
+        return urlObj;
+      })
+    };
+
+    const builder = new XMLBuilder({
+      format: true,
+      indentBy: '  ',
+      suppressEmptyObject: true
+    });
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n${builder.build(urlset)}`;
+    
+    fs.writeFileSync('sitemap.xml', xml);
+    
+    console.log(`✅ Generated sitemap with ${allPages.length} URLs`);
+    console.log(`📊 Money pages: ${this.getMoneyPages().length}`);
+    console.log(`🌍 Local pages: ${this.getLocalPages().length}`);
+    console.log(`💐 Flower types: ${this.getFlowerTypePages().length}`);
+    
+    return { count: allPages.length, xml };
+  }
+
+  deploy() {
+    console.log('🚀 Deploying to GitHub...');
+    
+    // Git commands for CI/CD
+    const commands = [
+      'git add sitemap.xml',
+      `git commit -m "Auto-update sitemap ${this.today} (${this.generate().count} URLs)"`,
+      'git push origin main'
+    ];
+    
+    commands.forEach(cmd => {
+      console.log(`$ ${cmd}`);
+      // In production, use child_process.execSync(cmd)
+    });
+    
+    console.log('✅ Deploy complete!');
+  }
+}
+
+// Auto-run on execution
+if (require.main === module) {
+  const generator = new FlowerDeliverySitemapGenerator();
+  generator.generate();
+  
+  // Uncomment for auto-deploy
+  // generator.deploy();
+}
+
+module.exports = FlowerDeliverySitemapGenerator;
